@@ -34,5 +34,17 @@ logger = logging.getLogger("brand-guardian-runner")  # Creates a named logger fo
 
 def run_cli_simulation():
     """
-    Simulates 
+    Simulates a Video Compliance Audit request.
+    
+    This function orchestrates the entire audit process:
+    - Creates a unique session ID
+    - Prepared the video URL and metadata
+    - Runs it through the AI workflow
+    - Displays the compliance results
     """
+
+    # Step 1: Generate a unique session ID for tracking this audit
+    session_id = str(uuid.uuid4())
+    logger.info(f"Starting compliance audit with session ID: {session_id}")
+
+    

@@ -47,4 +47,75 @@ def run_cli_simulation():
     session_id = str(uuid.uuid4())
     logger.info(f"Starting compliance audit with session ID: {session_id}")
 
+    # Step 2: Define Initial State
+
+    Initial_inputs = {
+        "video_url": "https://youtu.be/dT7S75eYhcQ",
+
+        "video_id": f"vid_{session_id[:8]}",
+
+        "compliance_results": [],
+
+        "errors": []
+    }
+
+    print("\n--- 1. input payload: Initializing workflow ---")
+
+    print(f"I {json.dumps(Initial_inputs, indent=2)}")
+
+
+    try:
+        final_state = app.invoke(Initial_inputs)
+
+        # ========== DISPLAY SECTION: EXECUTION COMPLETE ==========
+        print("\n--- 2. WORKFLOW EXECUTION COMPLETE ---")
+        
+        # ========== STEP 4: OUTPUT RESULTS ==========
+        # Display a formatted compliance report
+        
+        print("\n=== COMPLIANCE AUDIT REPORT ===")
+
+        print(f"Video ID: {final_state.get('video_id')}")
+
+        print(f"Status: {final_state.get('final_status')}")
+
+        print("\n[ VIOLATIONS DETECTED ]")
+
+        results = final_state.get("compliance_results", [])
+
+        if results:
+            for issue in results:
+                print(f"- [{issue.get('severity')}] {issue.get('category')}: {issue.get('description')}")
+
+        else:
+            print("No violations found.")
+
+        print("\n[ FINAL SUMMARY ]")
+
+        print(final_state.get('final_report'))
+
+    except Exception as e:
+        logger.error(f"Workflow Execution Failed: {str(e)}")
+        
+        # Re-raise the exception so we see the full error traceback
+        # This helps with debugging (shows exactly where/why it failed)
+        raise e
     
+if __name__ == "__main__":
+    run_cli_simulation()  # Start the compliance audit simulation
+
+
+
+'''
+You have moved from "Coding" to "Product."
+
+Ingestion:  (YouTube -> Azure)
+
+Indexing:  (Speech-to-Text + OCR)
+
+Retrieval:  (Found the rules about "Claims")
+
+Reasoning:  (Applied rules to the specific claims in the video)
+
+You are done. Your pipeline is fully operational.
+'''

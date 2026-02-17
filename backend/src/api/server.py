@@ -16,7 +16,9 @@ setup_telemetry()
 from backend.src.graph.workflow import app as compliance_graph
 
 logging.basicConfig(level=logging.INFO)
-
+logging.getLogger("azure.core.pipeline.policies.http_logging_policy").setLevel(logging.WARNING)
+logging.getLogger("azure.identity").setLevel(logging.WARNING)
+logging.getLogger("azure.core").setLevel(logging.WARNING)
 logger = logging.getLogger("api-server")
 
 app = FastAPI(
@@ -130,8 +132,9 @@ async def audit_video(request: AuditRequest):
         return AuditResponse(
             session_id=session_id,
             video_id=final_state.get("video_id"),
-            status = final_state.get("final_report",  "No report generated."),
-            final_report=final_state.get("compliance_results",[])
+            status=final_state.get("final_status", "UNKNOWN"),
+            final_report=final_state.get("final_report", "No report generated."),
+            compliance_results=final_state.get("compliance_results", [])
         )
     except Exception as e:
         logger.error(f"Audit Failed: {str(e)}")

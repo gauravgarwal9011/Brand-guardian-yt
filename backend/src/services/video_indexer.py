@@ -9,7 +9,7 @@ logger = logging.getLogger("video-indexer")
 
 class VideoIndexerService:
     def __init__(self):
-        self.account_id = os.getenv("")
+        self.account_id = os.getenv("AZURE_VI_ACCOUNT_ID")
         self.location = os.getenv("AZURE_VI_LOCATION")
         self.subscription_id = os.getenv("AZURE_SUBSCRIPTION_ID")
         self.resource_group = os.getenv("AZURE_RESOURCE_GROUP")
@@ -96,7 +96,8 @@ class VideoIndexerService:
             url = f"https://api.videoindexer.ai/{self.location}/Accounts/{self.account_id}/Videos/{video_id}/Index"
             params = {"accessToken": vi_token}
             response = requests.get(url, params=params)
-            data = response.josn()
+            data = response.json()
+            logger.info(f"Response type: {type(data)}, Response: {str(data)[:500]}")
 
             state = data.get("state")
             if state == "Processed":
@@ -113,19 +114,21 @@ class VideoIndexerService:
         """Parses the JSON into our State format."""
         transcript_lines = []
         for v in vi_json.get("videos", []):
-            for insight in v.get("insights", {}.get("transcript",[])):
-                transcript_lines.append(insight.get("text"))
+            insights = v.get("insights", {})
+            for item in insights.get("transcript", []):
+                transcript_lines.append(item.get("text"))
 
         ocr_lines = []
         for v in vi_json.get("videos", []):
-            for insight in v.get("insights",{}).get("ocr",[]):
-                ocr_lines.append(insight.get("text"))
+            insights = v.get("insights", {})
+            for item in insights.get("ocr", []):
+                ocr_lines.append(item.get("text"))
 
         return {
             "transcript": " ".join(transcript_lines),
             "ocr_text": ocr_lines,
             "video_metadata": {
-                "duration": vi_json.get("summarizedInsights",{}).get("duration",{}).get("seconds"),
+                "duration": vi_json.get("summarizedInsights", {}).get("duration", {}).get("seconds"),
                 "platform": "youtube"
             }
         }

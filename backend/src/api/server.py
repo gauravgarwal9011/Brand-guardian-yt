@@ -140,3 +140,80 @@ async def audit_video(request: AuditRequest):
             status_code=500,
             detail=f"Workflow Execution Failed: {str(e)}"
         )
+    
+
+# ========== STEP 8: HEALTH CHECK ENDPOINT ==========
+@app.get("/health")
+# ↑ GET request at http://localhost:8000/health
+def health_check():
+    """
+    Simple endpoint to verify the API is running.
+    
+    Used by:
+    - Load balancers (to check if server is alive)
+    - Monitoring systems (uptime checks)
+    - Developers (quick test that server started)
+    
+    Example usage:
+    curl http://localhost:8000/health
+    
+    Response:
+    {
+        "status": "healthy",
+        "service": "Brand Guardian AI"
+    }
+    """
+    return {"status": "healthy", "service": "Brand Guardian AI"}
+    # FastAPI automatically converts dict to JSON response
+
+
+# ========== STEP 9: RUN INSTRUCTIONS (IN COMMENTS) ==========
+'''
+To execute: 
+uv run uvicorn backend.src.api.server:app --reload
+
+Command breakdown:
+- uv run          = Run with UV package manager
+- uvicorn         = ASGI server (like Gunicorn but async)
+- backend.src.api.server:app = Python path to FastAPI app object
+- --reload        = Auto-restart server when code changes (dev mode)
+
+Server starts at: http://localhost:8000
+
+Access points:
+- API Docs:    http://localhost:8000/docs (interactive Swagger UI)
+- Health:      http://localhost:8000/health
+- Main API:    POST http://localhost:8000/audit
+'''
+
+'''
+## How the API Works (Request Flow)
+```
+1. Client sends POST request:
+   POST http://localhost:8000/audit
+   Body: {"video_url": "https://youtu.be/abc123"}
+   
+2. FastAPI receives request:
+   - Validates request matches AuditRequest model
+   - Calls audit_video() function
+   
+3. audit_video() executes:
+   - Generates session ID
+   - Prepares initial_inputs dict
+   - Calls compliance_graph.invoke()
+   
+4. LangGraph workflow runs:
+   START → Indexer → Auditor → END
+   
+5. Function returns AuditResponse:
+   - FastAPI validates response matches model
+   - Converts Pydantic object to JSON
+   - Sends HTTP response to client
+   
+6. Azure Monitor captures:
+   - Request duration
+   - HTTP status code
+   - Any errors
+   - Graph execution trace
+
+'''

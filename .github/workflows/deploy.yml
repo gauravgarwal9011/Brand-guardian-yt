@@ -1,0 +1,83 @@
+name: Build and Deploy to Azure Container Apps
+
+on:
+  push:
+    branches: [main]
+
+env:
+  ACR_NAME: brandguardianacr
+  RESOURCE_GROUP: brand-guardian-rg
+  BACKEND_APP: brandguardian-backend
+  FRONTEND_APP: brandguardian-frontend
+  ENVIRONMENT: brandguardian-env
+  LOCATION: eastus
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Login to ACR
+        run: az acr login --name ${{ env.ACR_NAME }}
+
+      # ---- Build & Push Backend ----
+      - name: Build backend image
+        run: |
+          docker build \
+            -f Dockerfile.backend \
+            -t ${{ env.ACR_NAME }}.azurecr.io/brandguardian-backend:${{ github.sha }} \
+            -t ${{ env.ACR_NAME }}.azurecr.io/brandguardian-backend:latest \
+            .
+
+      - name: Push backend image
+        run: |
+          docker push ${{ env.ACR_NAME }}.azurecr.io/brandguardian-backend:${{ github.sha }}
+          docker push ${{ env.ACR_NAME }}.azurecr.io/brandguardian-backend:latest
+
+      # ---- Build & Push Frontend ----
+      - name: Build frontend image
+        run: |
+          docker build \
+            -f Dockerfile.frontend \
+            -t ${{ env.ACR_NAME }}.azurecr.io/brandguardian-frontend:${{ github.sha }} \
+            -t ${{ env.ACR_NAME }}.azurecr.io/brandguardian-frontend:latest \
+            .
+
+      - name: Push frontend image
+        run: |
+          docker push ${{ env.ACR_NAME }}.azurecr.io/brandguardian-frontend:${{ github.sha }}
+          docker push ${{ env.ACR_NAME }}.azurecr.io/brandguardian-frontend:latest
+
+      # ---- Deploy Backend ----
+      - name: Deploy backend to Container Apps
+        run: |
+          az containerapp update \
+            --name ${{ env.BACKEND_APP }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --image ${{ env.ACR_NAME }}.azurecr.io/brandguardian-backend:${{ github.sha }}
+
+      # ---- Deploy Frontend ----
+      - name: Deploy frontend to Container Apps
+        run: |
+          az containerapp update \
+            --name ${{ env.FRONTEND_APP }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --image ${{ env.ACR_NAME }}.azurecr.io/brandguardian-frontend:${{ github.sha }}
+
+      # ---- Print URLs ----
+      - name: Show deployment URLs
+        run: |
+          BACKEND_FQDN=$(az containerapp show --name ${{ env.BACKEND_APP }} --resource-group ${{ env.RESOURCE_GROUP }} --query "properties.configuration.ingress.fqdn" -o tsv)
+          FRONTEND_FQDN=$(az containerapp show --name ${{ env.FRONTEND_APP }} --resource-group ${{ env.RESOURCE_GROUP }} --query "properties.configuration.ingress.fqdn" -o tsv)
+          echo "## Deployment Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "- **Frontend**: https://$FRONTEND_FQDN" >> $GITHUB_STEP_SUMMARY
+          echo "- **Backend**: https://$BACKEND_FQDN" >> $GITHUB_STEP_SUMMARY
+          echo "- **Backend Health**: https://$BACKEND_FQDN/health" >> $GITHUB_STEP_SUMMARY

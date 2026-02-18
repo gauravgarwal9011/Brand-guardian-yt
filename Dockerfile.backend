@@ -1,0 +1,36 @@
+FROM python:3.12-slim
+
+# Install system dependencies
+# - ffmpeg: required by yt-dlp for video processing
+# - build-essential: for compiling C extensions (psycopg2-binary, etc.)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install uv package manager
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+# Working directory must be project root (imports use "backend.src.xxx" paths)
+WORKDIR /app
+
+# Copy dependency files first for Docker layer caching
+COPY pyproject.toml uv.lock .python-version ./
+
+# Install Python dependencies
+RUN uv sync --frozen --no-dev
+
+# Copy application code
+COPY backend/ ./backend/
+COPY main.py ./
+
+# Ensure __init__.py files exist for Python package resolution
+RUN touch backend/__init__.py backend/src/__init__.py backend/src/api/__init__.py
+
+EXPOSE 8000
+
+# --timeout-keep-alive 620 keeps connections alive longer than the 600s nginx proxy timeout
+CMD ["uv", "run", "uvicorn", "backend.src.api.server:app", \
+     "--host", "0.0.0.0", \
+     "--port", "8000", \
+     "--timeout-keep-alive", "620"]

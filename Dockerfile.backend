@@ -23,6 +23,7 @@ RUN uv sync --frozen --no-dev
 # Copy application code
 COPY backend/ ./backend/
 COPY main.py ./
+COPY cookies.txt /app/cookies.txt
 
 # Ensure __init__.py files exist for Python package resolution
 RUN touch backend/__init__.py backend/src/__init__.py backend/src/api/__init__.py

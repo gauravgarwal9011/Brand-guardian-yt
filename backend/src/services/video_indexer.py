@@ -45,12 +45,20 @@ class VideoIndexerService:
         """Download a youtube video to a local file."""
         logger.info(f"Downloading Youtube video: {url}")
 
+        cookie_path = os.path.join(os.getcwd(), 'cookies.txt')
+
         ydl_opts = {
             'format': 'best',
-            'outtmpl': output_path, # output template
+            'outtmpl': output_path,
             'quiet': True,
-            'overwrites': True
+            'overwrites': True,
         }
+
+        if os.path.exists(cookie_path):
+            ydl_opts['cookiefile'] = cookie_path
+            logger.info("Using cookies.txt for YouTube download")
+        else:
+            logger.warning("cookies.txt not found, downloading without cookies")
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([url])

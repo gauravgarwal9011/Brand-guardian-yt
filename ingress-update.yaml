@@ -1,0 +1,7 @@
+properties:
+  configuration:
+    ingress:
+      external: true
+      targetPort: 8000
+      transport: Auto
+      timeoutInSeconds: 600

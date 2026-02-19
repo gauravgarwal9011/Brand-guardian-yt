@@ -39,7 +39,6 @@ Given a YouTube URL, Brand Guardian downloads the video, extracts transcript and
                |                                       |
         Azure Video Indexer               Azure OpenAI + Azure AI Search
 ```
-
 ## Tech Stack
 
 | Layer | Technology |

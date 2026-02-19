@@ -45,10 +45,10 @@ class VideoIndexerService:
         """Download a youtube video to a local file."""
         logger.info(f"Downloading Youtube video: {url}")
 
-        cookie_path = os.path.join(os.getcwd(), 'cookies.txt')
+        cookie_path = '/app/cookies.txt'
 
         ydl_opts = {
-            'format': 'best',
+            'format': 'best[ext=mp4]/best',
             'outtmpl': output_path,
             'quiet': True,
             'overwrites': True,

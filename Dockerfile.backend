@@ -2,11 +2,16 @@ FROM python:3.12-slim
 
 # Install system dependencies
 # - ffmpeg: required by yt-dlp for video processing
-# - build-essential: for compiling C extensions (psycopg2-binary, etc.)
+# - build-essential: for compiling C extensions
+# - deno: JS runtime required by yt-dlp + yt-dlp-ejs for YouTube's n-parameter challenge
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     ffmpeg \
-    && rm -rf /var/lib/apt/lists/*
+    curl \
+    unzip \
+    && curl -fsSL https://deno.land/install.sh | DENO_INSTALL=/usr/local sh \
+    && rm -rf /var/lib/apt/lists/* \
+    && deno --version
 
 # Install uv package manager
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/

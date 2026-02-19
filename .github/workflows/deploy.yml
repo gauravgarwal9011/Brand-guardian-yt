@@ -28,6 +28,10 @@ jobs:
       - name: Login to ACR
         run: az acr login --name ${{ env.ACR_NAME }}
 
+      # ---- Write cookies.txt from secret (gitignored, needed for yt-dlp) ----
+      - name: Create cookies.txt
+        run: echo "${{ secrets.COOKIES_TXT }}" > cookies.txt
+
       # ---- Build & Push Backend ----
       - name: Build backend image
         run: |

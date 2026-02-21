@@ -18,7 +18,7 @@ setup_telemetry()
 from backend.src.graph.workflow import app as compliance_graph
 from backend.src.services.video_indexer import VideoIndexerService
 
-MAX_VIDEO_DURATION = 30  # seconds
+MAX_VIDEO_DURATION = 50  # seconds
 
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("azure.core.pipeline.policies.http_logging_policy").setLevel(logging.WARNING)

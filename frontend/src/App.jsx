@@ -16,6 +16,13 @@ function App() {
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 py-12">
         {phase === 'idle' && <AuditForm onSubmit={submitAudit} />}
 
+        {phase === 'checking' && (
+          <div className="animate-fade-in text-center py-12">
+            <div className="inline-block w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin mb-4" />
+            <p className="text-slate-400">Checking video duration...</p>
+          </div>
+        )}
+
         {phase === 'loading' && <LoadingState startTime={startTime} />}
 
         {phase === 'success' && (

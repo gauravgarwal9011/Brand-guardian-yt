@@ -16,6 +16,9 @@ from backend.src.api.telemetry import setup_telemetry
 setup_telemetry()
 
 from backend.src.graph.workflow import app as compliance_graph
+from backend.src.services.video_indexer import VideoIndexerService
+
+MAX_VIDEO_DURATION = 30  # seconds
 
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("azure.core.pipeline.policies.http_logging_policy").setLevel(logging.WARNING)
@@ -104,9 +107,24 @@ class AuditResponse(BaseModel):
     compliance_results: List[ComplianceIssue]
 
 
+@app.post("/check-duration")
+async def check_duration(request: AuditRequest):
+    """Check video duration before starting the full audit."""
+    try:
+        vi_service = VideoIndexerService()
+        duration = vi_service.get_video_duration(request.video_url)
+        logger.info(f"Video duration: {duration}s (max: {MAX_VIDEO_DURATION}s)")
+        return {
+            "duration": duration,
+            "max_duration": MAX_VIDEO_DURATION,
+            "allowed": duration <= MAX_VIDEO_DURATION,
+        }
+    except Exception as e:
+        logger.error(f"Duration check failed: {e}")
+        raise HTTPException(status_code=400, detail=f"Could not fetch video info: {str(e)}")
+
+
 @app.post("/audit", response_model=AuditResponse)
-
-
 async def audit_video(request: AuditRequest):
     """
     Main API endpoint that triggers the compliance audit workflow.

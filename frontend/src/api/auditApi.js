@@ -15,6 +15,21 @@ export async function submitAudit(videoUrl) {
   return response.json();
 }
 
+export async function checkDuration(videoUrl) {
+  const response = await fetch(`${API_BASE}/check-duration`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ video_url: videoUrl }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || 'Failed to check video duration');
+  }
+
+  return response.json();
+}
+
 export async function checkHealth() {
   const response = await fetch(`${API_BASE}/health`);
   if (!response.ok) {

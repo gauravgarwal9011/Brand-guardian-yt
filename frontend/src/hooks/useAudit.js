@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { submitAudit as submitAuditApi } from '../api/auditApi';
+import { checkDuration, submitAudit as submitAuditApi } from '../api/auditApi';
 
 export function useAudit() {
   const [phase, setPhase] = useState('idle');
@@ -8,12 +8,26 @@ export function useAudit() {
   const [startTime, setStartTime] = useState(null);
 
   const submitAudit = async (videoUrl) => {
-    setPhase('loading');
-    setStartTime(Date.now());
+    setPhase('checking');
     setError(null);
     setResults(null);
 
     try {
+      const durationData = await checkDuration(videoUrl);
+
+      if (!durationData.allowed) {
+        setError(
+          `Video is ${durationData.duration} seconds long. ` +
+          `Maximum allowed duration is ${durationData.max_duration} seconds. ` +
+          `Please submit a shorter video.`
+        );
+        setPhase('error');
+        return;
+      }
+
+      setPhase('loading');
+      setStartTime(Date.now());
+
       const data = await submitAuditApi(videoUrl);
       setResults(data);
       setPhase('success');

@@ -40,7 +40,20 @@ class VideoIndexerService:
             raise Exception(f"Failed to get VI Account Token: {response.text}")
         return response.json().get("accessToken")
     
-    # --- NEW FUNCTION: Download from YouTube ---
+    def get_video_duration(self, url):
+        """Extract video duration (in seconds) without downloading."""
+        cookie_path = '/app/cookies.txt'
+        ydl_opts = {
+            'quiet': True,
+            'skip_download': True,
+        }
+        if os.path.exists(cookie_path):
+            ydl_opts['cookiefile'] = cookie_path
+
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=False)
+            return info.get('duration', 0)
+
     def download_youtube_video(self, url, output_path = "temp_video.mp4"):
         """Download a youtube video to a local file."""
         logger.info(f"Downloading Youtube video: {url}")
